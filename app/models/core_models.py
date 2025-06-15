@@ -1,14 +1,42 @@
-from sqlmodel import JSON, Relationship, SQLModel, Field
+from sqlmodel import JSON, Enum, Relationship, SQLModel, Field
 from typing import List, Optional
 from datetime import datetime,timezone
+
+class UserRole(str, Enum):
+    ADMIN = "admin"
+    AGENT = "agent"
+    CASINO = "casino"
+
+class User(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    username: str = Field(nullable=False, unique=True, index=True)
+    password_hash: str = Field(nullable=False)
+    
+    role: UserRole = Field(nullable=False, description="admin, agent, or casino")
+
+    # Only used when role == 'casino'
+    casino_id: Optional[int] = Field(default=None, foreign_key="casino.id")
+
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    is_active: bool = Field(default=True)
+    
+    # Relationships
+    casino: Optional["Casino"] = Relationship(back_populates="user")
+
+
+
+
+
+
 class Casino(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     
     # Unique username for login (can be email or custom string)
-    username: str = Field(index=True, unique=True, nullable=False, max_length=50)
+    # username: str = Field(index=True, unique=True, nullable=False, max_length=50)
     
-    # Store password hash (never store plain text password)
-    password_hash: str = Field(nullable=False)
+    # # Store password hash (never store plain text password)
+    # password_hash: str = Field(nullable=False)
     
     # Commission percentage the casino pays you (e.g., 0.02 for 2%)
     commission_rate: float = Field(default=0.02, description="Commission percentage, e.g., 0.02 for 2%")
@@ -31,6 +59,7 @@ class Casino(SQLModel, table=True):
     is_active: bool = Field(default=True, description="Is casino active and allowed to play")
 
     # Relationships
+    user: Optional["User"] = Relationship(back_populates="casino")
 
     tickets: List["Ticket"] = Relationship(back_populates="casino")
     round_profits: List["CasinoProfitPerRound"] = Relationship(back_populates="casino")
