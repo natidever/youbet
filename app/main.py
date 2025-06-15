@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends
 from sqlmodel import select
-from app.models.user import User
+from app.models.core_models import User
 from app.config.db import init_db, get_session
 
 def lifespan(app: FastAPI):
