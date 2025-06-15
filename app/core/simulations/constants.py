@@ -1,0 +1,8 @@
+MIN_BET = 20
+MAX_BET = 10_000
+LOW_CAP = 100
+MID_LOW = 100
+MID_HIGH = 500
+P_LOW = 0.02     # 2% below $100
+P_MED = 0.88
+ 

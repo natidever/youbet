@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  backend:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql+psycopg2://user:password@postgres:5432/mydb
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    develop:
+      watch:
+        - action: sync
+          path: ./app              # local FastAPI source
+          target: /app/app         # container path, assuming Dockerfile has COPY . /app
+          ignore:
+            - __pycache__/
+            - .pytest_cache/
+            - '*.pyc'
+        - action: rebuild
+          path: pyproject.toml     # for uv dependency management
+        - action: rebuild
+          path: uv.lock
+
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
