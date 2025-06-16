@@ -1,7 +1,12 @@
 from fastapi import FastAPI, Depends
 from sqlmodel import select
 # from app.models.core_models import User
+from app.api.agent.agent_router import agent_router
+from app.api.auth.auth_router import auth_router
+from app.api.auth.auth_service import get_password_hash
 from app.config.db import init_db, get_session
+from app.constants.role import UserRole
+from app.models.core_models import User
 
 def lifespan(app: FastAPI):
     print("Initializing DB...")
@@ -11,6 +16,11 @@ def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+
+app.include_router(agent_router)
+app.include_router(auth_router)
+
+
 # @app.post("/users/")
 # def create_user(user: User, session = Depends(get_session)):
 #     session.add(user)
@@ -19,5 +29,38 @@ app = FastAPI(lifespan=lifespan)
 #     return user
 
 @app.get("/")
-def get_users():
-    return "Server running"
+def create_admin(session=Depends(get_session)):
+    password=get_password_hash(password="hana@teshager")
+
+    # return "Server  runnin" 
+
+
+    try:
+        admin = User(
+            username="natnael",
+            password_hash=password,
+            role=UserRole.ADMIN
+        )
+
+        session.add(admin)
+        session.commit()
+        session.refresh(admin)
+        print("admin:created")
+        return admin
+    except Exception as e :
+        print(f"error:{e}")
+   
+
+
+
+
+
+
+
+def create_first_admin():
+    pass
+
+
+    
+    
+    

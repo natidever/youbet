@@ -1,4 +1,5 @@
-from sqlmodel import JSON, Enum, Relationship, SQLModel, Field
+from enum import Enum
+from sqlmodel import JSON, Relationship, SQLModel, Field
 from typing import List, Optional
 from datetime import datetime,timezone
 
@@ -6,6 +7,9 @@ class UserRole(str, Enum):
     ADMIN = "admin"
     AGENT = "agent"
     CASINO = "casino"
+
+
+
 
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
