@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from app.api.auth.auth_schemas import AuthSchema
+from app.api.auth.auth_schemas import AuthSchema, AuthSchemaPost
 from app.config.db import get_session
 from app.api.auth import auth_service
 from app.config.logger import logger
@@ -16,9 +16,14 @@ async def login(auth_data:AuthSchema ,session=Depends(get_session)):
                       password=auth_data.password
                       )
     logger.debug(f"retrived user when login{user}")
-    
-    # jwt_encoded=auth_service.create_token(data={user.role})
+    jwt_encoded=auth_service.create_token(data={"role": user.role,})
     
 
-    return user
+    return AuthSchemaPost(
+    username=user.username,
+    role=user.role,
+    id=user.id,
+    access_token=jwt_encoded,
+    is_active=user.is_active
+    )
 
