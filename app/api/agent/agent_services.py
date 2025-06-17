@@ -7,6 +7,7 @@ from app.constants.role import UserRole
 from app.models.core_models import User
 
 def register_agnet(agnet:AgentCreate,session:Session):
+   
    try:
     agnet_object = User(
         username=agnet.username,

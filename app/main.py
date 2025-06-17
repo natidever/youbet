@@ -4,6 +4,7 @@ from sqlmodel import select
 from app.api.agent.agent_router import agent_router
 from app.api.auth.auth_router import auth_router
 from app.api.auth.auth_service import get_password_hash
+from app.api.casino.casino_router import casino_router
 from app.config.db import init_db, get_session
 from app.constants.role import UserRole
 from app.models.core_models import User
@@ -18,7 +19,10 @@ app = FastAPI(lifespan=lifespan)
 
 
 app.include_router(agent_router)
+app.include_router(casino_router)
 app.include_router(auth_router)
+
+
 
 
 # @app.post("/users/")

@@ -42,14 +42,14 @@ class Casino(SQLModel, table=True):
     # # Store password hash (never store plain text password)
     # password_hash: str = Field(nullable=False)
     
-    # Commission percentage the casino pays you (e.g., 0.02 for 2%)
-    commission_rate: float = Field(default=0.02, description="Commission percentage, e.g., 0.02 for 2%")
+    # Commission percentage the casino pays me 30 (e.g., 0.3 for 30%)
+    commission_rate: float = Field(default=0.3, description="Commission percentage, e.g., 0.02 for 2%")
     
     # Casino display name (friendly)
     name: str = Field(nullable=False, max_length=100)
     
     # Contact email or phone (optional)
-    contact_email: Optional[str] = Field(default=None, max_length=12)
+    contact_email: Optional[str] = Field(unique=True,default=None, max_length=25)
     contact_phones: List[str] = Field(default_factory=list, sa_type=JSON)
     
    
