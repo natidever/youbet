@@ -49,7 +49,7 @@ class Casino(SQLModel, table=True):
     name: str = Field(nullable=False, max_length=100)
     
     # Contact email or phone (optional)
-    contact_email: Optional[str] = Field(unique=True,default=None, max_length=25)
+    contact_email: Optional[str] = Field(unique=True,default=None, max_length=50)
     contact_phones: List[str] = Field(default_factory=list, sa_type=JSON)
     
    

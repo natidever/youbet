@@ -11,7 +11,7 @@ agent_router =APIRouter(tags=["Agent"])
 @agent_router.post("/register-agent/")
 async def register_agent(
                         agent_data:AgentCreate,
-                        user=Depends(require_role([UserRole.ADMIN])),
+                        role=Depends(require_role([UserRole.ADMIN])),
                         session=Depends(get_session),
 
                     
