@@ -8,11 +8,19 @@ from app.api.casino.casino_router import casino_router
 from app.config.db import init_db, get_session
 from app.constants.role import UserRole
 from app.models.core_models import User
+from app.websocket.websocket_consumer import websocket_consumer
+from app.websocket.websocket_router import websocket_router
 
-def lifespan(app: FastAPI):
-    print("Initializing DB...")
+import asyncio
+
+async def lifespan(app: FastAPI):
+    print("Initializing Socket Consumer...")
     # init_db()
+    task=asyncio.create_task(websocket_consumer())
+
     yield
+    task.cancel()
+    await task
     print("Shutting down...")
 
 app = FastAPI(lifespan=lifespan)
@@ -21,6 +29,8 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(agent_router)
 app.include_router(casino_router)
 app.include_router(auth_router)
+app.include_router(websocket_router)
+
 
 
 
