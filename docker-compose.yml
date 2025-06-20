@@ -90,6 +90,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 3
+    networks:
+      - app_net
 
 volumes:
   postgres_data:

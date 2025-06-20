@@ -48,7 +48,6 @@ def create_admin(session=Depends(get_session)):
 
     # return "Server  runnin" 
 
-
     try:
         admin = User(
             username="natnael",
@@ -64,12 +63,6 @@ def create_admin(session=Depends(get_session)):
     except Exception as e :
         print(f"error:{e}")
    
-
-
-
-
-
-
 
 def create_first_admin():
     pass

@@ -34,6 +34,63 @@ class CasinoResponse(CasinoBase):
 
 
 
+class TicketBase(BaseModel):
+    guessed_multiplier: float = Field(nullable=False, description="The multiplier guessed by the player")
+    bet_amount: float = Field(nullable=False, ge=19,description="bet amount should be atleaset 20")
+
+ 
+
+
+
+class TicketCreate(TicketBase):
+    pass
+   
+
+
+
+
+class TicketResponse(TicketBase):
+    id:int
+    ticket_code: str = Field(nullable=False, description="Printed code for validation")
+    payout_amount: Optional[float] = Field(default=None, ge=0, description="Amount to pay out if winner")
+    round_id: int
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

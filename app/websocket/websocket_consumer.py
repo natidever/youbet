@@ -23,6 +23,7 @@ async def websocket_consumer():
                     try:
                         data = json.loads(message["data"])
                         print(f"Broadcasting game data: {data}")
+                        
                         await manager.broadcast_game_data(data)
                     except json.JSONDecodeError as e:
                         print(f"Invalid JSON: {e}")

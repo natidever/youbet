@@ -2,12 +2,23 @@
 
 
 import json
+from pprint import pprint
+
+from fastapi import Depends
+from sqlmodel import Session, select
+from app.config.db import get_session, get_session_sync
 from app.config.settings import Settings
-from app.constants.constant_strings import ConstantStrnigs
+from app.constants.constant_strings import ConstantStrnigs, RoundState
+from app.core.db_utils import create_round
 from app.core.game_engine import GameEngine, generate_server_seed
 import asyncio
 import json
-from redis.asyncio import Redis 
+from redis.asyncio import Redis
+
+from app.core.schemas import RoundCreate
+from app.models.core_models import Round 
+from app.config.logger import logger
+
 
 settings = Settings()
 
@@ -20,27 +31,44 @@ async def game_runner():
     print("Game runner started")
     round_number=0
     game = GameEngine()
-    server_seed_info = generate_server_seed()
-    client_seed = game.generate_client_seed()
+   
 
     num_rounds = 1_000_000
     multipliers = []
 
     while True:
+
+        server_seed_info = generate_server_seed()
+        client_seed = game.generate_client_seed()
+
+        round_create=RoundCreate(
+            state=RoundState.PENDING.value,
+            round_number=round_number,
+            server_seed=server_seed_info.seed,
+            commitment_hash="test_commitment_hash"
+        )
+
+        # creating round before the round starts
+
+        with get_session_sync() as db_session:
+             created_round=create_round(round=round_create,session=db_session)
+        
+        if created_round:
+            logger.info(f"created_roud:{created_round}")
+        else :
+            logger.info(f"round not created:{created_round}")
+
+
+        # saving the round status 
+        
         result = game.simulate_round(server_seed_info.seed, client_seed, round_number)
+        logger.info(f"server_seed:{server_seed_info.seed}")
+        logger.info(f"clinet_seed:{client_seed}")
+
         round_number+=1
         multipliers.append(result['multiplier'])
         print(f"Multipler:{result['multiplier']}")
-        # await redis.publish(
-        #     ConstantStrnigs.MULTIPLIER_CHANNEL.value,
-        #     json.dumps({
-        #     ConstantStrnigs.MULTIPLIER.value:result['multiplier'],
-        #     ConstantStrnigs.ROUND.value:round_number
-        # })
 
-        
-
-        #   )
 
         subscriber_count=await redis.publish(
     ConstantStrnigs.MULTIPLIER_CHANNEL.value,
@@ -52,7 +80,6 @@ async def game_runner():
         print(f"Published to {subscriber_count} subscribers")
 
 
-        
         
         await asyncio.sleep(2)
         yield result['multiplier']
@@ -68,16 +95,6 @@ if __name__ == "__main__":
 
     asyncio.run(run_game())
 
-    # for round_number in range(1, num_rounds + 1):
-    #     result = game.simulate_round(server_seed_info.seed, client_seed, round_number)
-    #     multipliers.append(result['multiplier'])
-        # print(f"Ml:{result['multiplier']}")
 
-    # high = max(multipliers)
-    # low = min(multipliers)
-    # avg = sum(multipliers) / len(multipliers)
 
-    # print(f"Simulated {num_rounds} rounds.")
-    # print(f"Highest multiplier: {high}")
-    # print(f"Lowest multiplier: {low}")
-    # print(f"Average multiplier: {avg:.4f}")
+

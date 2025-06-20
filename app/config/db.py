@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 import os
 
 from sqlmodel import create_engine, SQLModel, Session
@@ -14,3 +15,15 @@ def init_db():
 def get_session():
     with Session(engine) as session:
         yield session
+
+
+@contextmanager
+def get_session_sync():
+    with Session(engine) as session:
+        try:
+            yield session
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()

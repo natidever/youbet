@@ -100,7 +100,7 @@ class Ticket(SQLModel, table=True):
     bet_amount: float = Field(nullable=False, ge=0)
 
     # Timestamp of when ticket was created
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Computed fields after round ends
     actual_multiplier: Optional[float] = Field(default=None, description="Crash multiplier of the round")
