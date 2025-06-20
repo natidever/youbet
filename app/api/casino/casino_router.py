@@ -19,3 +19,11 @@ async def register_casino_route(casino:CasinoBase,user:UserCreate,
 
 
 
+
+
+
+@casino_router.post("/submit-tikcet")
+async def submit_ticket_route():
+    pass
+
+

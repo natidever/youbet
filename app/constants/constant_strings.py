@@ -11,3 +11,8 @@ class RoundState(str,Enum):
     PENDING='pending',
     RUNNING="running",
     DONE="done"
+
+
+class RedisKeys(str,Enum):
+    CURRENT_ROUND="current_round"
+    CURRENT_ROUND_NUMBER="current_round_number"
