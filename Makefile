@@ -6,6 +6,8 @@ down:
 	docker compose down
 db_push:
 	docker compose exec backend alembic upgrade head
+test:
+	python -m pytest app/test -p no:warnings
 # db_commit:
 # 	docker compose exec backend alembic revision --autogenerate -m "$(comment)"
 

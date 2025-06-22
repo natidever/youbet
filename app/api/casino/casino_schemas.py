@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field,EmailStr
 from sqlalchemy import JSON
 
 class CasinoBase(BaseModel):
-    name: str = Field(nullable=False, max_length=100)
+    name: str = Field(json_schema_extra={"nullable": False} , max_length=100)
     contact_email: Optional[EmailStr] = Field(default=None, max_length=50)
     contact_phones: List[str] = Field(default_factory=list,)
     

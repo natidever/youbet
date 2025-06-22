@@ -20,7 +20,8 @@ from app.dependencies.auth_dependecies import get_current_user, require_role
 casino_router = APIRouter(prefix="/casino",tags=["Casino"])
 # casino can be created only by agent or admin
 @casino_router.post("/register")
-async def register_casino_route(casino:CasinoBase,
+async def register_casino_route(
+                                casino:CasinoBase,
                                 user:UserCreate,
                                 session=Depends(get_session),
                                 role=Depends(require_role([UserRole.ADMIN,UserRole.AGENT]))
@@ -49,6 +50,23 @@ async def submit_ticket_route(
         session=session,
         current_user=current_user
     )
+
+
+@casino_router.post("/resolve-ticket/{ticket_code}")
+async def resolve_ticket_route(
+    ticket_code: int,
+    session=Depends(get_session),
+    current_user=Depends(get_current_user)
+):
+    return await casino_service.resolve_ticket_service(
+        ticket_code=ticket_code,
+        session=session,
+        current_user=current_user
+    )
+
+
+
+    #  get the ticket code and check if it is for current round and resole it (it is a winner or not)
     
 
 

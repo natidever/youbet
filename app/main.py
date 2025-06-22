@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Depends
 from sqlmodel import select
+from contextlib import asynccontextmanager
+
 # from app.models.core_models import User
 from app.api.agent.agent_router import agent_router
 from app.api.auth.auth_router import auth_router
@@ -12,7 +14,7 @@ from app.websocket.websocket_consumer import websocket_consumer
 from app.websocket.websocket_router import websocket_router
 
 import asyncio
-
+@asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Initializing Socket Consumer...")
     # init_db()
@@ -45,24 +47,25 @@ app.include_router(websocket_router)
 
 @app.get("/")
 def create_admin(session=Depends(get_session)):
-    password=get_password_hash(password="hana@teshager")
+    return "Server running"
+    # password=get_password_hash(password="hana@teshager")
 
-    # return "Server  runnin" 
+    # # return "Server  runnin" 
 
-    try:
-        admin = User(
-            username="natnael",
-            password_hash=password,
-            role=UserRole.ADMIN
-        )
+    # try:
+    #     admin = User(
+    #         username="natnael",
+    #         password_hash=password,
+    #         role=UserRole.ADMIN
+    #     )
 
-        session.add(admin)
-        session.commit()
-        session.refresh(admin)
-        print("admin:created")
-        return admin
-    except Exception as e :
-        print(f"error:{e}")
+    #     session.add(admin)
+    #     session.commit()
+    #     session.refresh(admin)
+    #     print("admin:created")
+    #     return admin
+    # except Exception as e :
+    #     print(f"error:{e}")
    
 
 def create_first_admin():
