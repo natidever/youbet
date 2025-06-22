@@ -1,9 +1,12 @@
 # this run the game in 4 min interval and send it to redis pub/sub 
 
 
+from datetime import datetime, timezone
 import json
 from pprint import pprint
 
+
+from app.util.db_utils import get_db_record
 from fastapi import Depends
 from sqlmodel import Session, select
 from app.config.db import get_session, get_session_sync
@@ -25,12 +28,12 @@ from app.redis.global_state import set_global_state
 settings = Settings()
 
 async def game_runner():
-    print(f"url:{settings.REDIS_URL}")
+    # print(f"url:{settings.REDIS_URL}")
     redis = await Redis.from_url(settings.REDIS_URL)
     pubsub=redis.pubsub()
 
 
-    print("Game runner started")
+    # print("Game runner started")
     # round_number=0
     game = GameEngine()
    
@@ -44,7 +47,15 @@ async def game_runner():
         client_seed = game.generate_client_seed()
         
         round_number=await redis_connection.incr(RedisKeys.CURRENT_ROUND_NUMBER.value),
-        logger.info(F"ROUND_NUMBER_FROM_REDIS {round_number[0]}")
+        
+        # logger.info(F"ROUND_NUMBER_FROM_REDIS {round_number[0]}")
+        logger.info(                
+
+                f"ROUND_{round_number[0]}_PENDING "
+
+
+
+        )
      
 
         round_create=RoundCreate(
@@ -58,31 +69,76 @@ async def game_runner():
 
         # creating round before the round starts
 
+
         with get_session_sync() as db_session:
              created_round=create_round(round=round_create,session=db_session)
+        # here people can register
         
+        
+        before_game_round_data={"round_number":round_number,"round_state":RoundState.PENDING.value}
         if created_round:
-            logger.info(f"created_roud:{created_round}")
-            # save it to redis here 
-            set_global_state(
+            # logger.info(f"created_roud:{created_round}")
+           
+           await set_global_state(
                 redis=redis_connection,
                 key=RedisKeys.CURRENT_ROUND.value,
-                data="",
+                data=before_game_round_data
             )
         else :
             logger.info(f"round not created:{created_round}")
 
 
-        # saving the round status 
+        # 4minute gap
+        await asyncio.sleep(60)
+
         
         result = game.simulate_round(server_seed_info.seed, client_seed, round_number)
-        logger.info(f"server_seed:{server_seed_info.seed}")
-        logger.info(f"clinet_seed:{client_seed}")
+        # logger.info(f"server_seed:{server_seed_info.seed}")
+        # logger.info(f"clinet_seed:{client_seed}")
 
-        
+
+
+
         multipliers.append(result['multiplier'])
-        print(f"Multipler:{result['multiplier']}")
+        # print(f"Multipler:{result['multiplier']}")
+        
+        """ HERE UPDATE THE GLOBAL STATE OF REDIS AND DATABASE FOR CURRENT ROUND
+            UPDATE THE DB ALSO HERE 
+         
+           DATA"""
+         
+        #  round state multiplier and othr things
+    
+        with get_session_sync() as db_session:
+            round_to_update=get_db_record(session=db_session,finder=round_number[0],field="round_number",table=Round)
+            round_to_update.state=RoundState.DONE.value
+            round_to_update.multiplier=result['multiplier']
+            round_to_update.end_time=datetime.now(timezone.utc)
+            db_session.commit()
+            db_session.refresh(round_to_update)
+            print(f"updated:{pprint(vars(round_to_update))}")
+            print(f"updatedx:{round_to_update}")
 
+            
+
+
+         
+
+        after_game_round_data={"round_number":round_number,"round_state":RoundState.DONE.value}
+        await set_global_state(
+            
+                redis=redis_connection,
+                key=RedisKeys.CURRENT_ROUND.value,
+                data=after_game_round_data
+            )
+        
+        logger.info(                
+
+                f"ROUND_{round_number[0]}_DONE  "
+
+
+
+        )
 
         subscriber_count=await redis.publish(
     ConstantStrnigs.MULTIPLIER_CHANNEL.value,
@@ -95,7 +151,7 @@ async def game_runner():
 
 
         
-        await asyncio.sleep(2)
+        # await asyncio.sleep(30)
         yield result['multiplier']
         # publish it to redis 
     

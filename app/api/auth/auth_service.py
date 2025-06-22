@@ -5,11 +5,14 @@ from sqlmodel import Session, select
 from app.models.core_models import User
 
 from passlib.context import CryptContext
+from fastapi import Depends, HTTPException
+
 
 from jose import jwt ,JWTError
 
 from app.config.settings import Settings
 from app.config.logger import logger 
+
 
 
 
@@ -21,21 +24,23 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def authenticate_user(session:Session, username: str, password: str):
-    try:
+    
         statement=select(User).where(User.username==username)
+
         result=session.exec(statement)
     
-
-
         user=result.one_or_none() 
         print(f"user_result:{user}")
         if not user:
-            return "Invalid Credentials"
+            logger.info ("Invalid Credentials")
+            raise HTTPException( status_code=401,detail=f"Invalid Credentials ")
+       
         if not verify_password(password, user.password_hash):
-            return False
+            logger.info ("Invalid Credentials")
+            raise HTTPException(  status_code=401,detail=f"Invalid Credentials"
+            )
         return user
-    except Exception as error:
-        print(f"Error:{error}")
+ 
 
 
 def verify_password(plain_password, hashed_password):
@@ -62,12 +67,12 @@ def create_token(data:dict,expire_date:timedelta| None=None):
         jwt_encoded=jwt.encode(to_encode,settings.SECRETE_KEY,algorithm=settings.ALGORITHM)
         # jwt_encoded=jwt.encode(to_encode,SECRETE_KEY,algorithm=ALGORITHM)
         logger.debug(f"ALGO:{settings.ALGORITHM} SECRETE:{settings.SECRETE_KEY}")
-
+        
         print(f"{jwt_encoded}")
-
+        
         
         return jwt_encoded
-    except JWTError as error:
+    except Exception as error:
         logger.error(f"jwt_error:{error}")
         raise Exception("JWT_EXCEPTION_CREATE_TOKEN")
 

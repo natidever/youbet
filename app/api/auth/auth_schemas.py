@@ -10,9 +10,10 @@ class AuthSchema(BaseModel):
 class AuthSchemaPost(BaseModel):
     role:str
     username:str
-    id:int
+    user_id:int
     is_active:bool
     access_token:str
+    casino_id:int | None = None
     
 
 

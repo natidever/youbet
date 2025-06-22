@@ -20,13 +20,18 @@ def set_global_state(redis:Redis,
      result= redis.set(name=key,value=json.dumps(data),ex=expire_second)
      if not result:
         logger.error("Unable to set the result")
-     logger.error("data_Set_to_redis \u2705")
+   #   logger.info("data_Set_to_redis \u2705")
     
      return result
 
     except json.JSONEncodeError as e:
         logger.error(f"JSON encoding failed: {str(e)}")
+        
+        raise
 
     except Exception as e :
        logger.error("Error occured to save global state of round")
+
+       raise
+       
 

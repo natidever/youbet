@@ -1,12 +1,19 @@
 
+from datetime import datetime
+import json
+from typing import Dict
+from app.constants.constant_strings import RedisKeys, RoundState
+from app.redis.redis_connection import redis_connection
+from app.util.db_utils import create_db_record, get_db_record, get_db_record_or_404
+from app.util.ticket_utils import geneate_tikcet_code
 from fastapi import Depends, HTTPException
 from sqlalchemy import select
 from sqlmodel import Session
 from app.api.auth.auth_service import get_password_hash
-from app.api.casino.casino_schemas import CasinoBase, CasinoResponse, UserCreate, UserResponse
+from app.api.casino.casino_schemas import CasinoBase, CasinoResponse, TicketCreate, TicketResponse, UserCreate, UserResponse
 from app.config.db import get_session
 from app.constants.role import UserRole
-from app.models.core_models import Casino, User
+from app.models.core_models import Casino, Round, Ticket, User
 from app.config.logger import logger
 
 def register_casino_service(casino:CasinoBase,user:UserCreate,session:Session)->CasinoResponse:
@@ -82,3 +89,93 @@ def register_casino_service(casino:CasinoBase,user:UserCreate,session:Session)->
             status_code=400,
             detail=f"Error creating casino+user: {str(e)}"
         )
+   
+
+
+
+
+
+async def submit_ticket_service(
+        session:Session,
+        current_user:Dict[str,any],
+        ticket:TicketCreate
+
+):
+   current_round_number= await redis_connection.get(RedisKeys.CURRENT_ROUND_NUMBER.value)
+    #2. fetch the current round_id using the redis key
+
+   current_db_round=get_db_record_or_404(
+                    session=session,
+                    finder=int(current_round_number),
+                    table=Round,
+                    field="round_number",
+                    error_message="round not found")
+    
+    # 3.get the casino_id from the current user
+   casino_id=current_user["casino_id"]
+    #4. Getting redis-data
+   round_state_bytes=await redis_connection.get(RedisKeys.CURRENT_ROUND.value)
+
+
+   round_state = json.loads(round_state_bytes.decode('utf-8'))
+   current_state = round_state["round_state"]
+
+   logger.info(f"rond_state_cc:{current_state}")
+    # 5.creating ticket
+   if current_state == RoundState.PENDING.value:
+        # 5.1 generating ticket code 
+       ticket_code=geneate_tikcet_code(casino_id=casino_id,
+                                       round_number=current_round_number,
+                                       guessed_multiplier=ticket.guessed_multiplier,
+                                       timestamp=int(datetime.now().timestamp())
+                                       
+                                       )
+       logger.info(f"geneated_ticket_code: {ticket_code}")
+        # 5.2 preparing ticket instance for creatoin
+       ticket_instance=Ticket(
+           casino_id=casino_id,
+           round_id=current_db_round.id,
+           ticket_code=ticket_code,
+           guessed_multiplier=ticket.guessed_multiplier,
+    
+           bet_amount=ticket.bet_amount
+           
+           
+       )
+
+
+       existing_ticket= get_db_record(
+           session=session,field="ticket_code",finder=ticket_code,table=Ticket
+       )
+       print(f"exisst{existing_ticket}")
+       if  existing_ticket:
+         raise HTTPException(status_code=400,detail="ticket already existed")
+
+        # creating ticket on db
+       created_ticket= create_db_record(session=session,table_instance=ticket_instance)
+       return TicketResponse(
+           id=created_ticket.id,
+           payout_amount=created_ticket.bet_amount*created_ticket.guessed_multiplier,
+           round_id=current_db_round.id,
+           ticket_code=created_ticket.ticket_code,
+           guessed_multiplier=created_ticket.guessed_multiplier,
+           bet_amount=created_ticket.bet_amount
+
+           
+           
+       )
+    #    return {"ticksetxxxx":created_ticket,"cs":current_db_round,"stssate":round_state}
+
+
+       
+   elif current_state == RoundState.DONE.value:
+       raise HTTPException(status_code=400,detail="Round is done")
+   else:
+       raise HTTPException(status_code=500,detail="Unexpected error")
+       
+
+   
+
+     
+     
+     

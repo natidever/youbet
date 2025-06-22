@@ -21,13 +21,16 @@ def get_current_user(token:str=Depends(oAuth2_schme)):
         decoded=jwt.decode(token,settings.SECRETE_KEY,algorithms=[settings.ALGORITHM])
        
         print(f"decodedx:{ decoded.get("role")}")
-        # user_id=decoded.values(user_id)
+        user_id=decoded.get("user_id")
         role=decoded.get("role")
+        casino_id=decoded.get("casino_id")
+        
         logger.debug(f"current_user_access:{role}")
 
+        
         if  not role :
             raise HTTPException(status_code=401, detail="Invalid token")
-        return {"role":role}
+        return {"role":role,"user_id":user_id,"casino_id":casino_id}
     except JWTError:
         raise HTTPException(status_code=401, detail="Token error")
     

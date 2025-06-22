@@ -34,9 +34,14 @@ class CasinoResponse(CasinoBase):
 
 
 
+
+
+
+
+
 class TicketBase(BaseModel):
-    guessed_multiplier: float = Field(nullable=False, description="The multiplier guessed by the player")
-    bet_amount: float = Field(nullable=False, ge=19,description="bet amount should be atleaset 20")
+    guessed_multiplier: float = Field(nullable=False, description="The multiplier guessed by the player",ge=1)
+    bet_amount: float = Field(nullable=False, ge=20,description="bet amount should be atleaset 20")
 
  
 
