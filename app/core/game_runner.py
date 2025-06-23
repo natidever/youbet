@@ -51,7 +51,7 @@ async def game_runner():
         # logger.info(F"ROUND_NUMBER_FROM_REDIS {round_number[0]}")
         logger.info(                
 
-                f"ROUND_{round_number[0]}_PENDING "
+                f"ROUND_FROM_RUNNER{round_number[0]}_PENDING "
 
 
 
@@ -89,7 +89,7 @@ async def game_runner():
 
 
         # 4minute gap
-        await asyncio.sleep(60)
+        await asyncio.sleep(30)
 
         
         result = game.simulate_round(server_seed_info.seed, client_seed, round_number)
@@ -100,6 +100,7 @@ async def game_runner():
 
 
         multipliers.append(result['multiplier'])
+        
         # print(f"Multipler:{result['multiplier']}")
         
         """ HERE UPDATE THE GLOBAL STATE OF REDIS AND DATABASE FOR CURRENT ROUND
@@ -134,11 +135,13 @@ async def game_runner():
         
         logger.info(                
 
-                f"ROUND_{round_number[0]}_DONE  "
+                f"ROUNDR_{round_number[0]}_DONE_MULTIPLIER_{result['multiplier']}"  
 
 
 
         )
+        
+      
 
         subscriber_count=await redis.publish(
     ConstantStrnigs.MULTIPLIER_CHANNEL.value,

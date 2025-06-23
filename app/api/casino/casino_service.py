@@ -159,7 +159,8 @@ async def submit_ticket_service(
            round_id=current_db_round.id,
            ticket_code=created_ticket.ticket_code,
            guessed_multiplier=created_ticket.guessed_multiplier,
-           bet_amount=created_ticket.bet_amount
+           bet_amount=created_ticket.bet_amount,
+           round_number=int(current_round_number),
 
            
            
@@ -172,6 +173,60 @@ async def submit_ticket_service(
        raise HTTPException(status_code=400,detail="Round is done")
    else:
        raise HTTPException(status_code=500,detail="Unexpected error")
+   
+
+
+async def resolve_ticket_service(
+        session:Session,
+        ticket_code:str,
+        current_user:Dict[str, any]
+):
+    # 1. get the ticket from db
+  ticket=get_db_record_or_404(
+        session=session,
+        finder=ticket_code,
+        table=Ticket,
+        field="ticket_code",
+        error_message="ticket not found"
+    )
+    # 2. get the current round from redis and  check if the ticket is from that round
+  current_round_number_byte = await redis_connection.get(RedisKeys.CURRENT_ROUND_NUMBER.value)
+#   change byte redis to int
+  current_round= int(current_round_number_byte.decode('utf-8'))
+  
+  
+  logger.info(f"current_round_numbexr:{current_round}")
+    #3.get the ticket round from db 
+  ticket_round=get_db_record_or_404(
+            session=session,
+            finder=ticket.round_id,
+            table=Round,
+            field="id",
+            error_message="round not found"
+        )
+  
+    # 4. check if the ticket is from the previos round
+    
+
+  if ticket_round.round_number != int(current_round-1):
+        raise HTTPException(status_code=400, detail="Ticket is not from the previous round")
+#   if ticket_round.is_redeemed:
+#         raise HTTPException(status_code=400, detail="Ticket has already been redeemed")
+  
+  
+#   if ticket.guessed_multiplier >=ticket_round.multiplier: 
+#       ticket.is_winner = True
+#       ticket.payout_amount = ticket.bet_amount * ticket.guessed_multiplier 
+      
+  
+
+
+  return {"is_winner":True,"payout_amount":ticket.payout_amount,"multiplier":ticket_round.multiplier}
+
+    # 5. Check if the ticket is already redeemed 
+    #6 check if the ticket is winning ticket if so return the payout amount
+
+  
        
 
    

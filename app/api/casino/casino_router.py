@@ -52,9 +52,9 @@ async def submit_ticket_route(
     )
 
 
-@casino_router.post("/resolve-ticket/{ticket_code}")
+@casino_router.get("/resolve-ticket/{ticket_code}")
 async def resolve_ticket_route(
-    ticket_code: int,
+    ticket_code: str,
     session=Depends(get_session),
     current_user=Depends(get_current_user)
 ):
@@ -66,7 +66,5 @@ async def resolve_ticket_route(
 
 
 
-    #  get the ticket code and check if it is for current round and resole it (it is a winner or not)
-    
 
-
+  

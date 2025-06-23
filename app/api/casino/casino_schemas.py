@@ -59,6 +59,7 @@ class TicketResponse(TicketBase):
     ticket_code: str = Field(nullable=False, description="Printed code for validation")
     payout_amount: Optional[float] = Field(default=None, ge=0, description="Amount to pay out if winner")
     round_id: int
+    round_number:int
 
 
 
