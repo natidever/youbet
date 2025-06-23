@@ -63,6 +63,16 @@ class TicketResponse(TicketBase):
 
 
 
+class TicketResolveResponse(BaseModel):
+    ticket_code: str
+    is_winner: bool
+    actual_multiplier: float
+    payout_amount: float
+    round_id: int
+    round_number:int
+
+
+
 
 
  

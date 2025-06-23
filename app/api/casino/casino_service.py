@@ -10,7 +10,7 @@ from fastapi import Depends, HTTPException
 from sqlalchemy import select
 from sqlmodel import Session
 from app.api.auth.auth_service import get_password_hash
-from app.api.casino.casino_schemas import CasinoBase, CasinoResponse, TicketCreate, TicketResponse, UserCreate, UserResponse
+from app.api.casino.casino_schemas import CasinoBase, CasinoResponse, TicketCreate, TicketResolveResponse, TicketResponse, UserCreate, UserResponse
 from app.config.db import get_session
 from app.constants.role import UserRole
 from app.models.core_models import Casino, Round, Ticket, User
@@ -205,14 +205,14 @@ async def resolve_ticket_service(
             error_message="round not found"
         )
   
+  return validate_ticket(ticket_round=ticket_round,ticket=ticket,current_round=current_round)
     # 4. check if the ticket is from the previos round
     
-
-  if ticket_round.round_number != int(current_round-1):
-        raise HTTPException(status_code=400, detail="Ticket is not from the previous round")
+#   validate_ticket()
+#   if ticket_round.round_number != int(current_round-1):
+#         raise HTTPException(status_code=400, detail="Ticket is not from the previous round")
 #   if ticket_round.is_redeemed:
 #         raise HTTPException(status_code=400, detail="Ticket has already been redeemed")
-  
   
 #   if ticket.guessed_multiplier >=ticket_round.multiplier: 
 #       ticket.is_winner = True
@@ -221,7 +221,7 @@ async def resolve_ticket_service(
   
 
 
-  return {"is_winner":True,"payout_amount":ticket.payout_amount,"multiplier":ticket_round.multiplier}
+#   return {"is_winner":True,"payout_amount":ticket.payout_amount,"multiplier":ticket_round.multiplier}
 
     # 5. Check if the ticket is already redeemed 
     #6 check if the ticket is winning ticket if so return the payout amount
@@ -232,5 +232,34 @@ async def resolve_ticket_service(
    
 
      
-     
+def validate_ticket(ticket_round:Round,ticket:Ticket,current_round:str)->TicketResolveResponse:
+  if ticket_round.round_number != int(current_round-1):
+        raise HTTPException(status_code=400, detail="Ticket is not from the previous round")
+  if ticket.is_redeemed:
+        raise HTTPException(status_code=400, detail="Ticket has already been redeemed")
+  
+  if ticket.guessed_multiplier <=ticket_round.multiplier: 
+      ticket.is_winner = True
+      ticket.payout_amount = ticket.bet_amount * ticket.guessed_multiplier 
+      return TicketResolveResponse(
+          ticket_code=ticket.ticket_code,
+          is_winner=ticket.is_winner,
+          actual_multiplier=ticket_round.multiplier,
+          payout_amount=ticket.payout_amount,
+          round_id=ticket_round.id,
+          round_number=ticket_round.round_number
+      )
+  else:
+        ticket.is_winner = False
+        ticket.payout_amount = 0.0
+        return TicketResolveResponse(
+            ticket_code=ticket.ticket_code,
+            is_winner=ticket.is_winner,
+            actual_multiplier=ticket_round.multiplier,
+            payout_amount=ticket.payout_amount,
+            round_id=ticket_round.id,
+            round_number=ticket_round.round_number
+        )
+
+    
      
