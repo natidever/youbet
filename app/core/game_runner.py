@@ -108,17 +108,21 @@ async def game_runner():
          
            DATA"""
          
-        #  round state multiplier and othr things
-    
-        with get_session_sync() as db_session:
-            round_to_update=get_db_record(session=db_session,finder=round_number[0],field="round_number",table=Round)
-            round_to_update.state=RoundState.DONE.value
-            round_to_update.multiplier=result['multiplier']
-            round_to_update.end_time=datetime.now(timezone.utc)
-            db_session.commit()
-            db_session.refresh(round_to_update)
-            print(f"updated:{pprint(vars(round_to_update))}")
-            print(f"updatedx:{round_to_update}")
+        #  round state multiplier and othr thing:
+
+        try:
+            with get_session_sync() as db_session:
+                round_to_update=get_db_record(session=db_session,finder=round_number[0],field="round_number",table=Round)
+                round_to_update.state=RoundState.DONE.value
+                round_to_update.multiplier=result['multiplier']
+                round_to_update.end_time=datetime.now(timezone.utc)
+                db_session.commit()
+                db_session.refresh(round_to_update)
+                print(f"updated:{pprint(vars(round_to_update))}")
+                print(f"updatedx:{round_to_update}")
+        except Exception as e:
+            logger.error("Error occured during upating round after round ends")
+            raise
 
             
 
