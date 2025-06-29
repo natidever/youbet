@@ -18,3 +18,9 @@ db_commit:
 # Ignore the message argument from being interpreted as a target
 %:
 	@:
+
+
+up_prod:
+	docker-compose up 
+down_prod:
+	docker-compose down

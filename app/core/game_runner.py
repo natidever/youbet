@@ -210,7 +210,7 @@ async def game_runner():
 
         multipliers.append(result['multiplier'])
         
-        print(f"Multipler:{result['multiplier']}")
+        print(f"Multiplerx:{result['multiplier']}")
         logger.info(f"server_seed:{server_seed_info.seed}")
 
         
