@@ -5,6 +5,7 @@ from typing import Dict
 from app.constants.constant_strings import RedisKeys, RoundState
 from app.redis.redis_connection import redis_connection
 from app.util.db_utils import create_db_record, get_db_record, get_db_record_or_404
+from app.util.redis_utils import get_round_state_value
 from app.util.ticket_utils import geneate_tikcet_code
 from fastapi import Depends, HTTPException
 from sqlalchemy import select
@@ -181,6 +182,12 @@ async def resolve_ticket_service(
         ticket_code:str,
         current_user:Dict[str, any]
 ):
+  current_round_state= await get_round_state_value(redis_connection=redis_connection, redis_key=RedisKeys.CURRENT_ROUND.value, json_key="round_state")
+
+  logger.info(f"stateue:{current_round_state}")
+    # 1. get the current user casino
+
+  
     # 1. get the ticket from db
   ticket=get_db_record_or_404(
         session=session,
@@ -205,7 +212,8 @@ async def resolve_ticket_service(
             error_message="round not found"
         )
   
-  return validate_ticket(ticket_round=ticket_round,ticket=ticket,current_round=current_round)
+#   return validate_ticket(ticket_round=ticket_round,ticket=ticket,current_round=current_round)
+  return {"state":current_round_state}
     # 4. check if the ticket is from the previos round
     
 #   validate_ticket()
@@ -234,13 +242,15 @@ async def resolve_ticket_service(
      
 def validate_ticket(ticket_round:Round,ticket:Ticket,current_round:str)->TicketResolveResponse:
   if ticket_round.round_number != int(current_round-1):
-        raise HTTPException(status_code=400, detail="Ticket is not from the previous round")
+        return HTTPException(status_code=400, detail="Ticket is not from the previous round")
   if ticket.is_redeemed:
-        raise HTTPException(status_code=400, detail="Ticket has already been redeemed")
+        return HTTPException(status_code=400, detail="Ticket has already been redeemed")
   
   if ticket.guessed_multiplier <=ticket_round.multiplier: 
       ticket.is_winner = True
       ticket.payout_amount = ticket.bet_amount * ticket.guessed_multiplier 
+    #   ticket.is_redeemed = True
+    #   here tax and other things can be applied
       return TicketResolveResponse(
           ticket_code=ticket.ticket_code,
           is_winner=ticket.is_winner,

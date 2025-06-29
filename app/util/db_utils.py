@@ -32,6 +32,7 @@ def get_db_record(
         select(table).where(getattr(table, field) == finder)
     ).first()
     if not db_record:
+       
        return None
 
     return db_record

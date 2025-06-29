@@ -78,6 +78,8 @@ class Casino(SQLModel, table=True):
 
 
 class Ticket(SQLModel, table=True):
+
+  
     id: Optional[int] = Field(default=None, primary_key=True)
 
     # Foreign keys
@@ -86,7 +88,6 @@ class Ticket(SQLModel, table=True):
     
     casino:Optional["Casino"]=Relationship(back_populates="tickets")
     round: Optional["Round"] = Relationship(back_populates="tickets")
-
 
 
 

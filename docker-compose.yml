@@ -48,6 +48,20 @@ services:
   game_runner:
     build: .
     command: python -m app.core.game_runner
+    develop:
+      
+      watch:
+        - action: sync
+          path: ./app              # local FastAPI source
+          target: /app/app         # container path, assuming Dockerfile has COPY . /app
+          ignore:
+            - __pycache__/
+            - .pytest_cache/
+            - '*.pyc'
+        - action: rebuild
+          path: pyproject.toml     # for uv dependency management
+        - action: rebuild
+          path: uv.lock
     # depends_on:
     #   - backend
     #   - postgres
