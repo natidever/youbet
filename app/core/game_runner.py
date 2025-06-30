@@ -67,7 +67,8 @@ async def game_runner():
 
 
         # Wait for registration before the multiplier is generated
-        await asyncio.sleep(15)
+        await asyncio.sleep(30)
+        logger.info("START_TICKET_RESOLUTION")
 
         
         result = game.simulate_round(server_seed_info.seed, client_seed, round_number)

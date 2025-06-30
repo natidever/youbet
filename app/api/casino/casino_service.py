@@ -177,6 +177,27 @@ async def submit_ticket_service(
    
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 async def resolve_ticket_service(
         session:Session,
         ticket_code:str,
@@ -207,32 +228,13 @@ async def resolve_ticket_service(
   ticket_round=get_db_record_or_404(
             session=session,
             finder=ticket.round_id,
-            table=Round,
+            table=Round, 
             field="id",
             error_message="round not found"
         )
   
-#   return validate_ticket(ticket_round=ticket_round,ticket=ticket,current_round=current_round)
-  return {"state":current_round_state}
-    # 4. check if the ticket is from the previos round
-    
-#   validate_ticket()
-#   if ticket_round.round_number != int(current_round-1):
-#         raise HTTPException(status_code=400, detail="Ticket is not from the previous round")
-#   if ticket_round.is_redeemed:
-#         raise HTTPException(status_code=400, detail="Ticket has already been redeemed")
-  
-#   if ticket.guessed_multiplier >=ticket_round.multiplier: 
-#       ticket.is_winner = True
-#       ticket.payout_amount = ticket.bet_amount * ticket.guessed_multiplier 
-      
-  
+  return validate_ticket(ticket_round=ticket_round,ticket=ticket,current_round=current_round)
 
-
-#   return {"is_winner":True,"payout_amount":ticket.payout_amount,"multiplier":ticket_round.multiplier}
-
-    # 5. Check if the ticket is already redeemed 
-    #6 check if the ticket is winning ticket if so return the payout amount
 
   
        
@@ -241,16 +243,17 @@ async def resolve_ticket_service(
 
      
 def validate_ticket(ticket_round:Round,ticket:Ticket,current_round:str)->TicketResolveResponse:
+  logger.info(f"from_api_{current_round}")
+  logger.info(f"ticket_round_number:{ticket_round.round_number}")
   if ticket_round.round_number != int(current_round-1):
-        return HTTPException(status_code=400, detail="Ticket is not from the previous round")
+        raise HTTPException(status_code=400, detail="Ticket is not from the previous round")
   if ticket.is_redeemed:
-        return HTTPException(status_code=400, detail="Ticket has already been redeemed")
+        raise HTTPException(status_code=400, detail="Ticket has already been redeemed")
   
-  if ticket.guessed_multiplier <=ticket_round.multiplier: 
-      ticket.is_winner = True
-      ticket.payout_amount = ticket.bet_amount * ticket.guessed_multiplier 
-    #   ticket.is_redeemed = True
-    #   here tax and other things can be applied
+  if ticket.is_winner: 
+      ticket.is_redeemed = True
+     
+
       return TicketResolveResponse(
           ticket_code=ticket.ticket_code,
           is_winner=ticket.is_winner,
@@ -260,8 +263,7 @@ def validate_ticket(ticket_round:Round,ticket:Ticket,current_round:str)->TicketR
           round_number=ticket_round.round_number
       )
   else:
-        ticket.is_winner = False
-        ticket.payout_amount = 0.0
+        ticket.is_redeemed = True
         return TicketResolveResponse(
             ticket_code=ticket.ticket_code,
             is_winner=ticket.is_winner,
@@ -274,6 +276,3 @@ def validate_ticket(ticket_round:Round,ticket:Ticket,current_round:str)->TicketR
     
      
 
-    #  this will be changed to just quring the database since already populated after the game ends
-    # we might only set is reedemd to true rather than calucalting the payout and other filed because 
-    # we already have the is winner and the payout populated after the round ends 
