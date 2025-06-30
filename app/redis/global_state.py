@@ -33,5 +33,6 @@ def set_global_state(redis:Redis,
        logger.error("Error occured to save global state of round")
 
        raise
+    
        
 

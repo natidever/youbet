@@ -16,3 +16,10 @@ class RoundState(str,Enum):
 class RedisKeys(str,Enum):
     CURRENT_ROUND="current_round"
     CURRENT_ROUND_NUMBER="current_round_number"
+
+
+
+class RedisRoundNumberGeneratorCircuitState(Enum):
+    CLOSED = 1
+    OPEN = 2
+    HALF_OPEN = 3

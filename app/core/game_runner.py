@@ -164,22 +164,7 @@ async def game_runner():
 
          
 
-        # after_game_round_data={"round_number":round_number,"round_state":RoundState.DONE.value}
-        # await set_global_state(
-            
-        #         redis=redis_connection,
-        #         key=RedisKeys.CURRENT_ROUND.value,
-        #         data=after_game_round_data
-        #     )
         
-        
-        # logger.info(                
-
-        #         f"ROUNDR_{round_number}_DONE_MULTIPLIER_{result['multiplier']}"  
-
-
-
-        # )
         await AfterRoundResolution.update_global_state_after_round(round_number=round_number)
         current_round_state= await get_round_state_value(redis_connection=redis_connection, redis_key=RedisKeys.CURRENT_ROUND.value, json_key="round_state")
 
@@ -197,18 +182,22 @@ async def game_runner():
 
 
 
-        #
+        
       
 
-        subscriber_count=await redis.publish(
-    ConstantStrnigs.MULTIPLIER_CHANNEL.value,
-    json.dumps({
-        ConstantStrnigs.MULTIPLIER.value:result['multiplier'],
-        ConstantStrnigs.ROUND.value:round_number
-    })
-)      
-        print(f"Published to {subscriber_count} subscribers")
+#         subscriber_count=await redis.publish(
+#     ConstantStrnigs.MULTIPLIER_CHANNEL.value,
+#     json.dumps({
+#         ConstantStrnigs.MULTIPLIER.value:result['multiplier'],
+#         ConstantStrnigs.ROUND.value:round_number
+#     })
+# )      
+#         print(f"Published to {subscriber_count} subscribers")
 
+       
+        await AfterRoundResolution.publish_to_websocket(redis=redis,multipler=result['multiplier'], round_number=round_number)
+
+        
         try:
             with get_session_sync() as db_session:
                 round_to_update=get_db_record(session=db_session,finder=round_number,field="round_number",table=Round)
