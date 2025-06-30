@@ -273,3 +273,7 @@ def validate_ticket(ticket_round:Round,ticket:Ticket,current_round:str)->TicketR
 
     
      
+
+    #  this will be changed to just quring the database since already populated after the game ends
+    # we might only set is reedemd to true rather than calucalting the payout and other filed because 
+    # we already have the is winner and the payout populated after the round ends 

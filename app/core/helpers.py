@@ -21,6 +21,8 @@ def create_round(session:Session,round:RoundCreate):
             select(Round).where(Round.round_number == round.round_number)
         ).first()
 
+        logger.info(f"existing_round: {existing_round}")
+
         if existing_round:
             error_msg = f"Round number {round.round_number} already exists"
             logger.warning(error_msg)
